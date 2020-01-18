@@ -12,78 +12,88 @@ class ViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view.
+        //createData()
+        updateData()
+        retrieveData()
+        
+        
+    }
+    func createData()
+    {
         //First we create instance of app delegate
-        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {return}
         
-        //Second we need the context. - This context is the manager like location manager, audio manager etc.
-        let context = appDelegate.persistentContainer.viewContext
+        //now we will make the context from thgis container
+        let managedContext = appDelegate.persistentContainer.viewContext
         
-        //        //write into context - 3rd step
-        //        let newUser = NSEntityDescription.insertNewObject(forEntityName: "User", into: context)
-        //        newUser.setValue("ritik", forKey: "name")
-        //        newUser.setValue(6889979909, forKey: "phone")
-        //        newUser.setValue("ritik@gmail.ca", forKey: "email")
-        //        newUser.setValue(70, forKey: "age")
-        //
-        //        //4th step - save context
-        //        do {
-        //            try context.save()
-        //            print(newUser,"is saved")
-        //        }catch
-        //        {
-        //            print(error)
-        //        }
+        //now we will create entity and new User records
+        let userEntity = NSEntityDescription.entity(forEntityName: "User", in: managedContext)
         
-        //fetch data and load it
-        let request = NSFetchRequest<NSFetchRequestResult>(entityName: "User")
-        request.predicate = NSPredicate(format: "email contains %@", ".com")
-        request.returnsObjectsAsFaults = false
-        //we find our data and will enclose it in try and catch because it can also be null
+        //finally we will populate the data
+        for data in 1...5{
+            let user = NSManagedObject(entity: userEntity!, insertInto: managedContext)
+            user.setValue("Anmol\(data)", forKeyPath: "name")
+            user.setValue("anmol\(data)@gmail.com", forKey: "email")
+        }
+        
+        //now we will save the data inside the core data
         do{
-            let results = try context.fetch(request)
-            if results.count > 0
+            try managedContext.save()
+            print("Data Saved")
+        }catch let error as NSError{
+            print("Could not save.\(error),\(error.userInfo)")
+        }
+    }
+    
+    func retrieveData()
+    {
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else{return}
+        
+        let managedContext = appDelegate.persistentContainer.viewContext
+        
+        //preparing the request of type NsFetchRequestfor the entity
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "User")
+        
+        do{
+            let result = try managedContext.fetch(fetchRequest)
+            for data in result as! [NSManagedObject]
             {
-                for result in results as! [NSManagedObject]{
-                    
-                    //                    if let name = result.value(forKey: "name"){
-                    //                        print(name)
-                    //                    }
-                    if let email = result.value(forKey: "email")
-                    {
-                        print(email)
-                        
-                        //update email address top "email@gmail.ca"
-                        let email = email as! String
-                        //update core data
-                        result.setValue(String(email.dropLast(2)) + ".com", forKey: "email")
-                        do {
-                            try context.save()
-                        }catch{
-                            print(error)
-                        }
-                        print(email)
-                    }
-                    
-                    
-                    
-                    //                    if let phone = result.value(forKey: "phone"){
-                    //                    print(result)
-                    //                    }
-                    //                    if let age = result.value(forKey: "age")
-                    //                    {
-                    //                        print(age)
-                    //                    }
-                }
-                
+                print(data.value(forKey: "name") as! String)
+                print(data.value(forKey: "email") as! String)
             }
-            
+        }
+        catch{
+            print("Failed")
+        }
+        
+    }
+    
+    func updateData()
+    {
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else{return}
+        
+        let managedContext = appDelegate.persistentContainer.viewContext
+        
+        //preparing the request of type NsFetchRequestfor the entity
+        let fetchRequest : NSFetchRequest<NSFetchRequestResult> = NSFetchRequest.init(entityName: "User")
+        fetchRequest.predicate = NSPredicate(format: "name = %@", "Anmol2")
+        do{
+            let test = try managedContext.fetch(fetchRequest)
+           
+            for user in (test as? [NSManagedObject])! {
+                user.setValue("abc", forKey: "name")
+            }
+            do{
+                try managedContext.save()
+            }
+            catch{
+                print(error)
+            }
         }
         catch{
             print(error)
         }
     }
-    
-    
 }
+
 
